@@ -1,5 +1,6 @@
 using Infrastructure;
 using Infrastructure.Utilities;
+using WebAPI.Exceptions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,7 +24,7 @@ if (app.Environment.IsDevelopment())
 // Configure GetInfo
 var httpContextAccessor = app.Services.GetRequiredService<IHttpContextAccessor>();
 GetInfo.Configure(httpContextAccessor);
-
+app.UseGlobalExceptionHandling();
 app.UseHttpsRedirection();
 
 app.UseAuthentication();

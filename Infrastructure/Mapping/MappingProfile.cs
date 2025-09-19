@@ -13,7 +13,6 @@ namespace Infrastructure.Mapping
             CreateMap<User, UserResponse>();
             CreateMap<User, CurrentUserResponse>();
             CreateMap<UserRegisterRequest, User>();
-
         }
     }
 }

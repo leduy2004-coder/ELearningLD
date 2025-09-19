@@ -3,6 +3,7 @@ using Application.Contracts;
 using Application.DTOs;
 using Application.DTOs.Request;
 using Application.DTOs.Response;
+using Application.Exceptions;
 using AutoMapper;
 using Domain.Entities;
 using Infrastructure.Data;
@@ -39,7 +40,7 @@ namespace Infrastructure.Repository
             if (user == null)
             {
                 _logger.LogError("User not found");
-                throw new Exception("User not found");
+                throw new AppException(ErrorCode.USER_NOT_EXISTED);
             }
             _logger.LogInformation("User found");
             return _mapper.Map<UserResponse>(user);
@@ -50,7 +51,7 @@ namespace Infrastructure.Repository
             if (user == null)
             {
                 _logger.LogError("User not found");
-                throw new Exception("User not found");
+                throw new AppException(ErrorCode.USER_NOT_EXISTED);
             }
             return _mapper.Map<CurrentUserResponse>(user);
         }
@@ -61,7 +62,7 @@ namespace Infrastructure.Repository
             if (user == null)
             {
                 _logger.LogError("User not found");
-                throw new Exception("User not found");
+                throw new AppException(ErrorCode.USER_NOT_EXISTED);
             }
 
             user.UpdatedAt = DateTime.Now;
@@ -78,7 +79,7 @@ namespace Infrastructure.Repository
             if (user == null)
             {
                 _logger.LogError("User not found");
-                throw new Exception("User not found");
+                throw new AppException(ErrorCode.USER_NOT_EXISTED);
             }
             await _userManager.DeleteAsync(user);
         }
