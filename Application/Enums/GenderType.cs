@@ -4,8 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Application.DTOs
+namespace Infrastructure.Utilities
 {
-    public record RegistrationResponse(bool Flag, string Message = null!);
-
+    public enum GenderType
+    {
+        Male,
+        Female,
+        Other
+    }
 }

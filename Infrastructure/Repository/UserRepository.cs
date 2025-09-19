@@ -1,10 +1,16 @@
 ﻿
 using Application.Contracts;
 using Application.DTOs;
+using Application.DTOs.Request;
+using Application.DTOs.Response;
+using AutoMapper;
 using Domain.Entities;
 using Infrastructure.Data;
+using Infrastructure.Utilities;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -14,75 +20,68 @@ namespace Infrastructure.Repository
 {
     class UserRepository : IUser
     {
-        private readonly AppDbContext appDbContext;
-        private readonly IConfiguration configuration;
-        public UserRepository(AppDbContext appDbContext, IConfiguration configuration) { 
-            this.appDbContext = appDbContext;
-            this.configuration = configuration;
-        }
 
-        public async Task<LoginResponse> LoginUserAsync(LoginDTO loginDTO)
+        private readonly UserManager<User> _userManager;
+        private readonly IMapper _mapper;
+        private readonly ILogger<UserRepository> _logger;
+
+        public UserRepository(UserManager<User> userManager, IMapper mapper, ILogger<UserRepository> logger)
         {
-            var getUser = await FindUserByEmail(loginDTO.Email);
-            if (getUser == null)
-            {
-                return new LoginResponse(false, "User not found");
-            }
- 
-            bool checkPassword = BCrypt.Net.BCrypt.Verify(loginDTO.Password, getUser.Password);
-            if (!checkPassword)
-            {
-                return new LoginResponse(false, "Invalid password");
-            }
-            else
-            {
-                return new LoginResponse(true, "Login successful", GenerateJWTToken(getUser));
-            }
+            _userManager = userManager;
+            _mapper = mapper;
+            _logger = logger;
         }
 
-        public async Task<RegistrationResponse> RegisterUserAsync(RegisterUserDTO registerUserDTO)
+        public async Task<UserResponse> GetByIdAsync(Guid id)
         {
-            var getUser = await FindUserByEmail(registerUserDTO.Email!);
-            if (getUser != null)
+            _logger.LogInformation("Getting user by id");
+            var user = await _userManager.FindByIdAsync(id.ToString());
+            if (user == null)
             {
-                return new RegistrationResponse(false, "User already exists");
+                _logger.LogError("User not found");
+                throw new Exception("User not found");
             }
-            appDbContext.Users.Add(new ApplicationUser()
-            {
-                UserName = registerUserDTO.UserName,
-                Email = registerUserDTO.Email,
-                Password = BCrypt.Net.BCrypt.HashPassword(registerUserDTO.Password)
-            });
-            await appDbContext.SaveChangesAsync();
-            return new RegistrationResponse(true, "User registered successfully");
+            _logger.LogInformation("User found");
+            return _mapper.Map<UserResponse>(user);
         }
- 
-        private String GenerateJWTToken(ApplicationUser user)
+        public async Task<CurrentUserResponse> GetCurrentUserAsync()
         {
-            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Key"]!));
-            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
-            var claims = new[]
+            var user = await _userManager.FindByIdAsync(GetInfo.GetUserId());
+            if (user == null)
             {
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Email, user.Email!),
-                new Claim(ClaimTypes.Name, user.UserName!)
-            };
-            var token = new JwtSecurityToken(
-                issuer: configuration["Jwt:Issuer"],
-                audience: configuration["Jwt:Audience"],
-                claims: claims,
-                expires: DateTime.Now.AddHours(1),
-                signingCredentials: credentials
-            );
-            return new JwtSecurityTokenHandler().WriteToken(token);
-
+                _logger.LogError("User not found");
+                throw new Exception("User not found");
+            }
+            return _mapper.Map<CurrentUserResponse>(user);
         }
 
-        private async Task<ApplicationUser?> FindUserByEmail(string? email)
+        public async Task<UserResponse> UpdateAsync(Guid id, UpdateUserRequest request)
         {
-            return await appDbContext.Users.FirstOrDefaultAsync(u => u.Email == email);
+            var user = await _userManager.FindByIdAsync(id.ToString());
+            if (user == null)
+            {
+                _logger.LogError("User not found");
+                throw new Exception("User not found");
+            }
+
+            user.UpdatedAt = DateTime.Now;
+            user.FullName = request.FullName;
+            user.Email = request.Email;
+            user.Gender = request.Gender;
+
+            await _userManager.UpdateAsync(user);
+            return _mapper.Map<UserResponse>(user);
         }
-
-
+        public async Task DeleteAsync(Guid id)
+        {
+            var user = await _userManager.FindByIdAsync(id.ToString());
+            if (user == null)
+            {
+                _logger.LogError("User not found");
+                throw new Exception("User not found");
+            }
+            await _userManager.DeleteAsync(user);
+        }
     }
+
 }

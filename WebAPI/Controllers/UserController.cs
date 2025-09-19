@@ -1,5 +1,5 @@
 ﻿using Application.Contracts;
-using Application.DTOs;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace WebAPI.Controllers
@@ -8,29 +8,39 @@ namespace WebAPI.Controllers
     [ApiController]
     public class UserController : Controller
     {
-        private readonly IUser user;
+        private readonly IUser _userService;
         public IActionResult Index()
         {
             return View();
         }
 
-        public UserController(IUser user)
+        public UserController(IUser _userService)
         {
-            this.user = user;
+            this._userService = _userService;
         }
 
-        [HttpPost("login")]
-        public async Task<ActionResult<LoginResponse>> LoginUserIn([FromBody] LoginDTO loginDTO)
+        [HttpGet("user/{id}")]
+        [Authorize]
+        public async Task<IActionResult> GetById(Guid id)
         {
-            var result = await user.LoginUserAsync(loginDTO);
-            return Ok(result);
+            var response = await _userService.GetByIdAsync(id);
+            return Ok(response);
         }
 
-        [HttpPost("register")]
-        public async Task<ActionResult<LoginResponse>> RegisterUser(RegisterUserDTO registerUserDTO)
+        [HttpGet("current-user")]
+        [Authorize]
+        public async Task<IActionResult> GetCurrentUser()
         {
-            var result = await user.RegisterUserAsync(registerUserDTO);
-            return Ok(result);
+            var response = await _userService.GetCurrentUserAsync();
+            return Ok(response);
         }
+        [HttpDelete("user/{id}")]
+        [Authorize]
+        public async Task<IActionResult> Delete(Guid id)
+        {
+            await _userService.DeleteAsync(id);
+            return Ok();
+        }
+
     }
 }

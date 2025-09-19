@@ -1,9 +1,11 @@
 using Infrastructure;
+using Infrastructure.Utilities;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddInfrastructureServices(builder.Configuration);
+
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -17,6 +19,10 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+// Configure GetInfo
+var httpContextAccessor = app.Services.GetRequiredService<IHttpContextAccessor>();
+GetInfo.Configure(httpContextAccessor);
 
 app.UseHttpsRedirection();
 

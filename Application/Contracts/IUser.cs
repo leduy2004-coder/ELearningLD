@@ -1,11 +1,17 @@
 ﻿
 using Application.DTOs;
+using Application.DTOs.Request;
+using Application.DTOs.Response;
+using System.Threading.Tasks;
 
 namespace Application.Contracts
 {
     public interface IUser
     {
-        Task<RegistrationResponse> RegisterUserAsync(RegisterUserDTO registerUserDTO);
-        Task<LoginResponse> LoginUserAsync(LoginDTO loginDTO);
+        Task<CurrentUserResponse> GetCurrentUserAsync();
+        Task<UserResponse> GetByIdAsync(Guid id);
+        Task<UserResponse> UpdateAsync(Guid id, UpdateUserRequest request);
+        Task DeleteAsync(Guid id);
+
     }
 }
