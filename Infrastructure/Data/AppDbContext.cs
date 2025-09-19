@@ -1,4 +1,5 @@
 ﻿using Domain.Entities;
+using Infrastructure.SeedConfiguration;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -22,7 +23,7 @@ namespace Infrastructure.Data
         {
             base.OnModelCreating(modelBuilder);
 
-
+            modelBuilder.ApplyConfiguration(new RoleConfiguration());
 
             // --- Composite keys ---
             modelBuilder.Entity<ExamQuestion>()

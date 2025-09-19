@@ -60,6 +60,7 @@ namespace Infrastructure.Services
                 throw new AppException(ErrorCode.INVALID_KEY);
             }
 
+            var roles = await _userManager.AddToRoleAsync(newUser, "User");
             // Generate token
             var accessToken = await _tokenService.GenerateToken(newUser);
             var refreshToken = _tokenService.GenerateRefreshToken();
@@ -101,7 +102,7 @@ namespace Infrastructure.Services
                 _logger.LogWarning("Login failed - incorrect password for user: {Email}", request.Email);
                 throw new AppException(ErrorCode.PASSWORD_WRONG);
             }
-
+            var roles = await _userManager.GetRolesAsync(user);
             // Generate tokens
             var accessToken = await _tokenService.GenerateToken(user);
             var refreshToken = _tokenService.GenerateRefreshToken();
