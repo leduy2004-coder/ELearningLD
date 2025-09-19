@@ -10,16 +10,16 @@ using Microsoft.Extensions.Logging;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace Infrastructure.Repository
+namespace Infrastructure.Services
 {
-    public class AuthRepository : IAuth
+    public class AuthService : IAuth
     {
         private readonly IToken _tokenService;
         private readonly UserManager<User> _userManager;
         private readonly IMapper _mapper;
-        private readonly ILogger<AuthRepository> _logger;
+        private readonly ILogger<AuthService> _logger;
 
-        public AuthRepository(IToken tokenService, UserManager<User> userManager, IMapper mapper, ILogger<AuthRepository> logger)
+        public AuthService(IToken tokenService, UserManager<User> userManager, IMapper mapper, ILogger<AuthService> logger)
         {
             _tokenService = tokenService;
             _userManager = userManager;

@@ -17,16 +17,16 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
-namespace Infrastructure.Repository
+namespace Infrastructure.Services
 {
-    class UserRepository : IUser
+    class UserService : IUserService
     {
 
         private readonly UserManager<User> _userManager;
         private readonly IMapper _mapper;
-        private readonly ILogger<UserRepository> _logger;
+        private readonly ILogger<UserService> _logger;
 
-        public UserRepository(UserManager<User> userManager, IMapper mapper, ILogger<UserRepository> logger)
+        public UserService(UserManager<User> userManager, IMapper mapper, ILogger<UserService> logger)
         {
             _userManager = userManager;
             _mapper = mapper;

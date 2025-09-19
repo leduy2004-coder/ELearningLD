@@ -8,13 +8,13 @@ namespace WebAPI.Controllers
     [ApiController]
     public class UserController : Controller
     {
-        private readonly IUser _userService;
+        private readonly IUserService _userService;
         public IActionResult Index()
         {
             return View();
         }
 
-        public UserController(IUser _userService)
+        public UserController(IUserService _userService)
         {
             this._userService = _userService;
         }

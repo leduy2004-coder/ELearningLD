@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Application.Contracts
 {
-    public interface IUser
+    public interface IUserService
     {
         Task<CurrentUserResponse> GetCurrentUserAsync();
         Task<UserResponse> GetByIdAsync(Guid id);

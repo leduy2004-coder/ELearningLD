@@ -4,7 +4,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Application.Contracts;
-using Infrastructure.Repository;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
@@ -12,6 +11,7 @@ using Infrastructure.Data;
 using Infrastructure.Mapping;
 using Domain.Entities;
 using Microsoft.AspNetCore.Identity;
+using Infrastructure.Services;
 
 
 namespace Infrastructure
@@ -60,9 +60,9 @@ namespace Infrastructure
             });
             services.AddAutoMapper(typeof(MappingProfile).Assembly);
 
-            services.AddScoped<IAuth, AuthRepository>();
-            services.AddScoped<IToken, TokenRepository>();
-            services.AddScoped<IUser, UserRepository>();
+            services.AddScoped<IAuth, AuthService>();
+            services.AddScoped<IToken, TokenService>();
+            services.AddScoped<IUserService, UserService>();
 
             
 

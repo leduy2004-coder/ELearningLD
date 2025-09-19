@@ -15,15 +15,15 @@ using System.Text;
 using System.Threading.Tasks;
 
 
-namespace Infrastructure.Repository
+namespace Infrastructure.Services
 {
-    public class TokenRepository : IToken
+    public class TokenService : IToken
     {
         private readonly UserManager<User> _userManager;
-        private readonly ILogger<TokenRepository> _logger;
+        private readonly ILogger<TokenService> _logger;
         private readonly IConfiguration configuration;
 
-        public TokenRepository(IConfiguration configuration, UserManager<User> userManager, ILogger<TokenRepository> logger)
+        public TokenService(IConfiguration configuration, UserManager<User> userManager, ILogger<TokenService> logger)
         {
             _userManager = userManager;
             _logger = logger;
