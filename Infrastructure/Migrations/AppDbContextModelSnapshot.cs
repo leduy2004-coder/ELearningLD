@@ -111,6 +111,24 @@ namespace Infrastructure.Migrations
                         .HasFilter("[NormalizedName] IS NOT NULL");
 
                     b.ToTable("AspNetRoles", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = "d290f1ee-6c54-4b01-90e6-d701748f0851",
+                            ConcurrencyStamp = "Administrator with full access",
+                            Description = "Administrator with full access",
+                            Name = "Admin",
+                            NormalizedName = "ADMIN"
+                        },
+                        new
+                        {
+                            Id = "c290f1ee-6c54-4b01-90e6-d701748f0852",
+                            ConcurrencyStamp = "Regular user with limited access",
+                            Description = "Regular user with limited access",
+                            Name = "User",
+                            NormalizedName = "USER"
+                        });
                 });
 
             modelBuilder.Entity("Domain.Entities.User", b =>

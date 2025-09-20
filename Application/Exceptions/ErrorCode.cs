@@ -24,8 +24,8 @@ namespace Application.Exceptions
         public static readonly ErrorCode UNCATEGORIZED_EXCEPTION =
             new(9999, "Uncategorized error", HttpStatusCode.InternalServerError);
 
-        public static readonly ErrorCode INVALID_KEY =
-            new(1001, "Uncategorized error", HttpStatusCode.BadRequest);
+        public static readonly ErrorCode INVALID_USERNAME =
+            new(1001, "FullName existed", HttpStatusCode.BadRequest);
 
         public static readonly ErrorCode USER_EXISTED =
             new(1002, "User existed", HttpStatusCode.BadRequest);
@@ -59,5 +59,11 @@ namespace Application.Exceptions
 
         public static readonly ErrorCode REVOKE_FAIL =
             new(1012, "Revoke failed", HttpStatusCode.BadRequest);
+
+        public static readonly ErrorCode EMAIL_NOT_VERIFIED =
+            new(1013, "Email not verified", HttpStatusCode.InternalServerError);
+
+        public static readonly ErrorCode EMAIL_SEND_FAILED =
+            new(1014, "Failed to send email", HttpStatusCode.InternalServerError);
     }
 }

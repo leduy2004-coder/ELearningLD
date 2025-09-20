@@ -3,10 +3,12 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
+#pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
+
 namespace Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class First : Migration
+    public partial class SeedRoles : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -349,6 +351,15 @@ namespace Infrastructure.Migrations
                         principalTable: "Questions",
                         principalColumn: "QuestionId",
                         onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.InsertData(
+                table: "AspNetRoles",
+                columns: new[] { "Id", "ConcurrencyStamp", "Description", "Name", "NormalizedName" },
+                values: new object[,]
+                {
+                    { "c290f1ee-6c54-4b01-90e6-d701748f0852", "Regular user with limited access", "Regular user with limited access", "User", "USER" },
+                    { "d290f1ee-6c54-4b01-90e6-d701748f0851", "Administrator with full access", "Administrator with full access", "Admin", "ADMIN" }
                 });
 
             migrationBuilder.CreateIndex(

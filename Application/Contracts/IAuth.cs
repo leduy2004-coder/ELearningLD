@@ -8,9 +8,12 @@ namespace Application.Contracts
 {
     public interface IAuth
     {
-        Task<UserResponse> RegisterUserAsync(UserRegisterRequest registerUserDTO);
+        Task RegisterUserAsync(UserRegisterRequest registerUserDTO);
         Task<UserResponse> LoginUserAsync(UserLoginRequest loginDTO);
         Task<RevokeRefreshTokenResponse> RevokeRefreshToken(RefreshTokenRequest refreshTokenRemoveRequest);
         Task<CurrentUserResponse> RefreshTokenAsync(RefreshTokenRequest request);
+
+        Task VerifyEmailAsync(VerifyEmailRequest request);
+        Task ResendVerificationAsync(ResendVerificationRequest request);
     }
 }

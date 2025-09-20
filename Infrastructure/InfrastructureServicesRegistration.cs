@@ -12,6 +12,7 @@ using Infrastructure.Mapping;
 using Domain.Entities;
 using Microsoft.AspNetCore.Identity;
 using Infrastructure.Services;
+using Microsoft.AspNetCore.Hosting;
 
 
 namespace Infrastructure
@@ -58,13 +59,16 @@ namespace Infrastructure
                 options.ClientId = configuration["GoogleKeys:ClientId"]!;
                 options.ClientSecret = configuration["GoogleKeys:ClientSecret"]!;
             });
-            services.AddAutoMapper(typeof(MappingProfile).Assembly);
-
+            services.AddAutoMapper(cfg =>
+            {
+                cfg.AddProfile<MappingProfile>();
+            });
+            services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<IAuth, AuthService>();
             services.AddScoped<IToken, TokenService>();
             services.AddScoped<IUserService, UserService>();
+            services.AddScoped<IEmailService, EmailService>();
 
-            
 
             return services;
 
