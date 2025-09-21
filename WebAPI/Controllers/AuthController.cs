@@ -1,8 +1,10 @@
 ﻿using Application.Contracts;
 using Application.DTOs;
 using Application.DTOs.Request;
+using Application.DTOs.Request.AuthGG;
 using Application.DTOs.Response;
 using Application.Exceptions;
+using Infrastructure.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -33,6 +35,14 @@ namespace WebAPI.Controllers
         {
             var response = await _auth.LoginUserAsync(request);
             return Ok(ApiResponse.Success(response));
+        }
+
+        [HttpPost("google-login")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GoogleLogin([FromBody] GoogleAuthRequest request)
+        {
+            var response = await _auth.GoogleLoginAsync(request);
+            return Ok(ApiResponse<object>.Success(response, "Google authentication successful"));
         }
 
         [HttpPost("refresh-token")]

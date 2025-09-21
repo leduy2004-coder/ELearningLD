@@ -1,5 +1,6 @@
 ﻿using Application.Contracts;
 using Application.DTOs.Request;
+using Application.DTOs.Request.AuthGG;
 using Application.DTOs.Response;
 using Application.Exceptions;
 using AutoMapper;
@@ -19,11 +20,12 @@ namespace Infrastructure.Services
         private readonly IMapper _mapper;
         private readonly ILogger<AuthService> _logger;
         private readonly IEmailService _emailService;
-
-        public AuthService(IToken tokenService,IEmailService emailService, UserManager<User> userManager, IMapper mapper, ILogger<AuthService> logger)
+        private readonly IGoogleAuthService _googleAuthService;
+        public AuthService(IToken tokenService,IEmailService emailService,IGoogleAuthService googleAuthService, UserManager<User> userManager, IMapper mapper, ILogger<AuthService> logger)
         {
             _tokenService = tokenService;
             _emailService = emailService;
+            _googleAuthService = googleAuthService;
             _userManager = userManager;
             _mapper = mapper;
             _logger = logger;
@@ -181,8 +183,6 @@ namespace Infrastructure.Services
 
             return currentUserResponse;
         }
-
-
         public async Task<RevokeRefreshTokenResponse> RevokeRefreshToken(RefreshTokenRequest request)
         {
             _logger.LogInformation("Processing refresh token revocation");
@@ -250,6 +250,147 @@ namespace Infrastructure.Services
             }
 
             _logger.LogInformation("User {UserId} logged out successfully", userId);
+        }
+
+        public async Task<UserResponse> GoogleLoginAsync(GoogleAuthRequest request)
+        {
+            _logger.LogInformation("Processing Google login");
+
+            GoogleUserInfo googleUser;
+
+            // Validate Google token and get user info
+            if (!string.IsNullOrEmpty(request.IdToken))
+            {
+                googleUser = await _googleAuthService.ValidateGoogleTokenAsync(request.IdToken);
+            }
+            else if (!string.IsNullOrEmpty(request.AccessToken))
+            {
+                googleUser = await _googleAuthService.GetGoogleUserInfoAsync(request.AccessToken);
+            }
+            else
+            {
+                _logger.LogError("No Google token provided");
+                throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
+            }
+
+            if (string.IsNullOrEmpty(googleUser.Email))
+            {
+                _logger.LogError("Google user email is empty");
+                throw new AppException(ErrorCode.INVALID_GOOGLE_TOKEN);
+            }
+
+            _logger.LogInformation("Google authentication successful for email: {Email}", googleUser.Email);
+
+            // Check if user already exists
+            var existingUser = await _userManager.FindByEmailAsync(googleUser.Email);
+
+            if (existingUser != null)
+            {
+                // Existing user - login process
+                return await HandleExistingGoogleUser(existingUser, googleUser);
+            }
+            else
+            {
+                // New user - registration process
+                return await HandleNewGoogleUser(googleUser);
+            }
+        }
+
+        private async Task<UserResponse> HandleExistingGoogleUser(User user, GoogleUserInfo googleUser)
+        {
+            _logger.LogInformation("Handling existing Google user: {Email}", user.Email);
+
+            // Update user info from Google if needed
+            bool needUpdate = false;
+
+            if (string.IsNullOrEmpty(user.FullName) && !string.IsNullOrEmpty(googleUser.GivenName))
+            {
+                user.FullName = googleUser.GivenName;
+                needUpdate = true;
+            }
+
+            //if (string.IsNullOrEmpty(user.Avatar) && !string.IsNullOrEmpty(googleUser.Picture))
+            //{
+            //    user.Avatar = googleUser.Picture;
+            //    needUpdate = true;
+            //}
+
+            // Mark email as verified since it's verified by Google
+            if (!user.EmailConfirmed && googleUser.EmailVerified)
+            {
+                user.EmailConfirmed = true;
+                needUpdate = true;
+
+                _logger.LogInformation("Email automatically verified through Google for user: {Email}", user.Email);
+            }
+
+            if (needUpdate)
+            {
+                user.UpdatedAt = DateTime.UtcNow;
+                await _userManager.UpdateAsync(user);
+            }
+
+            // Generate tokens
+            var accessToken = await _tokenService.GenerateToken(user);
+            var refreshToken = _tokenService.GenerateRefreshToken();
+            await SaveRefreshToken(user, refreshToken);
+
+            _logger.LogInformation("Existing Google user logged in successfully: {Email}", user.Email);
+
+            var userResponse = _mapper.Map<UserResponse>(user);
+            userResponse.AccessToken = accessToken;
+            userResponse.RefreshToken = refreshToken;
+
+            return userResponse;
+        }
+
+        private async Task<UserResponse> HandleNewGoogleUser(GoogleUserInfo googleUser)
+        {
+            _logger.LogInformation("Creating new user from Google account: {Email}", googleUser.Email);
+
+            var newUser = new User
+            {
+                UserName = googleUser.Email,
+                Email = googleUser.Email,
+                FullName = googleUser.GivenName,
+                EmailConfirmed = true,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+                LockoutEnabled = false
+            };
+
+            var result = await _userManager.CreateAsync(newUser);
+            if (!result.Succeeded)
+            {
+                var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                _logger.LogError("Failed to create Google user {Email}: {Errors}", googleUser.Email, errors);
+                throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
+            }
+
+            await _userManager.AddToRoleAsync(newUser, "User");
+
+            var accessToken = await _tokenService.GenerateToken(newUser);
+            var refreshToken = _tokenService.GenerateRefreshToken();
+            await SaveRefreshToken(newUser, refreshToken);
+
+            // Send email welcome
+            try
+            {
+                await _emailService.SendWelcomeEmailAsync(newUser.Email, newUser.FullName ?? newUser.UserName);
+                _logger.LogInformation("Welcome email sent for new Google user: {Email}", newUser.Email);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to send welcome email for Google user: {Email}", newUser.Email);
+            }
+
+            _logger.LogInformation("New Google user created successfully: {Email}", googleUser.Email);
+
+            var userResponse = _mapper.Map<UserResponse>(newUser);
+            userResponse.AccessToken = accessToken;
+            userResponse.RefreshToken = refreshToken;
+
+            return userResponse;
         }
         public async Task VerifyEmailAsync(VerifyEmailRequest request)
         {
@@ -320,6 +461,8 @@ namespace Infrastructure.Services
 
             _logger.LogInformation("Verification email resent for user: {Email}", request.Email);
         }
+
+
         private async Task SaveRefreshToken(User user, string refreshToken)
         {
             var hashedRefreshToken = HashRefreshToken(refreshToken);

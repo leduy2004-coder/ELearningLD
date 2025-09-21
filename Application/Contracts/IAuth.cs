@@ -1,6 +1,7 @@
 ﻿
 using Application.DTOs;
 using Application.DTOs.Request;
+using Application.DTOs.Request.AuthGG;
 using Application.DTOs.Response;
 using System.Threading.Tasks;
 
@@ -15,5 +16,7 @@ namespace Application.Contracts
 
         Task VerifyEmailAsync(VerifyEmailRequest request);
         Task ResendVerificationAsync(ResendVerificationRequest request);
+
+        Task<UserResponse> GoogleLoginAsync(GoogleAuthRequest request);
     }
 }

@@ -65,5 +65,8 @@ namespace Application.Exceptions
 
         public static readonly ErrorCode EMAIL_SEND_FAILED =
             new(1014, "Failed to send email", HttpStatusCode.InternalServerError);
+
+        public static readonly ErrorCode INVALID_GOOGLE_TOKEN =
+            new(1015, "Invalid Google token", HttpStatusCode.BadRequest);
     }
 }

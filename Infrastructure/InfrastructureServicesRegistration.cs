@@ -54,10 +54,11 @@ namespace Infrastructure
                 };
             })
             .AddCookie()
-            .AddGoogle(GoogleDefaults.AuthenticationScheme, options =>
+            .AddGoogle(options =>
             {
-                options.ClientId = configuration["GoogleKeys:ClientId"]!;
-                options.ClientSecret = configuration["GoogleKeys:ClientSecret"]!;
+                options.ClientId = configuration["GoogleAuth:ClientId"]!;
+                options.ClientSecret = configuration["GoogleAuth:ClientSecret"]!;
+                options.CallbackPath = configuration["GoogleAuth:CallbackPath"]!;
             });
             services.AddAutoMapper(cfg =>
             {
@@ -68,7 +69,8 @@ namespace Infrastructure
             services.AddScoped<IToken, TokenService>();
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IEmailService, EmailService>();
-
+            services.AddHttpClient<IGoogleAuthService, GoogleAuthService>();
+            services.AddScoped<IGoogleAuthService, GoogleAuthService>();
 
             return services;
 
