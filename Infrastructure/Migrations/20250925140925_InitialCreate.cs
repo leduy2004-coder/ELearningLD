@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class SeedRoles : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -182,6 +182,31 @@ namespace Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "UserFollows",
+                columns: table => new
+                {
+                    FollowerId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    FollowedId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    FollowedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_UserFollows", x => new { x.FollowerId, x.FollowedId });
+                    table.ForeignKey(
+                        name: "FK_UserFollows_AspNetUsers_FollowedId",
+                        column: x => x.FollowedId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_UserFollows_AspNetUsers_FollowerId",
+                        column: x => x.FollowerId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Exams",
                 columns: table => new
                 {
@@ -192,6 +217,11 @@ namespace Infrastructure.Migrations
                     Description = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
                     Duration = table.Column<int>(type: "int", nullable: false),
                     CreatedBy = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    IsPublic = table.Column<bool>(type: "bit", nullable: false),
+                    InvitationCode = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    OpenTime = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    CloseTime = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    MaxAttempts = table.Column<int>(type: "int", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
@@ -213,6 +243,38 @@ namespace Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "LessonVideos",
+                columns: table => new
+                {
+                    VideoId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    SubjectId = table.Column<int>(type: "int", nullable: false),
+                    Title = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    VideoUrl = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    IsPublic = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedBy = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_LessonVideos", x => x.VideoId);
+                    table.ForeignKey(
+                        name: "FK_LessonVideos_AspNetUsers_CreatedBy",
+                        column: x => x.CreatedBy,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_LessonVideos_Subjects_SubjectId",
+                        column: x => x.SubjectId,
+                        principalTable: "Subjects",
+                        principalColumn: "SubjectId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Questions",
                 columns: table => new
                 {
@@ -222,6 +284,7 @@ namespace Infrastructure.Migrations
                     Content = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: false),
                     Level = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     CreatedBy = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Explanation = table.Column<string>(type: "nvarchar(max)", maxLength: 5000, nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
@@ -297,6 +360,48 @@ namespace Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Comments",
+                columns: table => new
+                {
+                    CommentId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Content = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: false),
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    TargetId = table.Column<int>(type: "int", nullable: true),
+                    TargetType = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    ExamId = table.Column<int>(type: "int", nullable: true),
+                    LessonVideoVideoId = table.Column<int>(type: "int", nullable: true),
+                    QuestionId = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Comments", x => x.CommentId);
+                    table.ForeignKey(
+                        name: "FK_Comments_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Comments_Exams_ExamId",
+                        column: x => x.ExamId,
+                        principalTable: "Exams",
+                        principalColumn: "ExamId");
+                    table.ForeignKey(
+                        name: "FK_Comments_LessonVideos_LessonVideoVideoId",
+                        column: x => x.LessonVideoVideoId,
+                        principalTable: "LessonVideos",
+                        principalColumn: "VideoId");
+                    table.ForeignKey(
+                        name: "FK_Comments_Questions_QuestionId",
+                        column: x => x.QuestionId,
+                        principalTable: "Questions",
+                        principalColumn: "QuestionId");
+                });
+
+            migrationBuilder.CreateTable(
                 name: "ExamQuestions",
                 columns: table => new
                 {
@@ -321,6 +426,49 @@ namespace Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Ratings",
+                columns: table => new
+                {
+                    RatingId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Score = table.Column<int>(type: "int", nullable: false),
+                    Review = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    TargetId = table.Column<int>(type: "int", nullable: true),
+                    TargetType = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    ExamId = table.Column<int>(type: "int", nullable: true),
+                    LessonVideoVideoId = table.Column<int>(type: "int", nullable: true),
+                    QuestionId = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Ratings", x => x.RatingId);
+                    table.ForeignKey(
+                        name: "FK_Ratings_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Ratings_Exams_ExamId",
+                        column: x => x.ExamId,
+                        principalTable: "Exams",
+                        principalColumn: "ExamId");
+                    table.ForeignKey(
+                        name: "FK_Ratings_LessonVideos_LessonVideoVideoId",
+                        column: x => x.LessonVideoVideoId,
+                        principalTable: "LessonVideos",
+                        principalColumn: "VideoId");
+                    table.ForeignKey(
+                        name: "FK_Ratings_Questions_QuestionId",
+                        column: x => x.QuestionId,
+                        principalTable: "Questions",
+                        principalColumn: "QuestionId");
+                });
+
+            migrationBuilder.CreateTable(
                 name: "AttemptAnswers",
                 columns: table => new
                 {
@@ -338,7 +486,8 @@ namespace Infrastructure.Migrations
                         name: "FK_AttemptAnswers_Answers_AnswerId",
                         column: x => x.AnswerId,
                         principalTable: "Answers",
-                        principalColumn: "AnswerId");
+                        principalColumn: "AnswerId",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_AttemptAnswers_ExamAttempts_AttemptId",
                         column: x => x.AttemptId,
@@ -358,8 +507,9 @@ namespace Infrastructure.Migrations
                 columns: new[] { "Id", "ConcurrencyStamp", "Description", "Name", "NormalizedName" },
                 values: new object[,]
                 {
-                    { "c290f1ee-6c54-4b01-90e6-d701748f0852", "Regular user with limited access", "Regular user with limited access", "User", "USER" },
-                    { "d290f1ee-6c54-4b01-90e6-d701748f0851", "Administrator with full access", "Administrator with full access", "Admin", "ADMIN" }
+                    { "b290f1ee-6c54-4b01-90e6-d701748f0853", "teacher-teaching-access", "User with teaching-related access", "Teacher", "TEACHER" },
+                    { "c290f1ee-6c54-4b01-90e6-d701748f0852", "student-restricted-access", "Standard user with restricted access", "Student", "STUDENT" },
+                    { "d290f1ee-6c54-4b01-90e6-d701748f0851", "admin-full-access", "Administrator with full system access", "Admin", "ADMIN" }
                 });
 
             migrationBuilder.CreateIndex(
@@ -417,6 +567,31 @@ namespace Infrastructure.Migrations
                 column: "QuestionId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Comments_ExamId",
+                table: "Comments",
+                column: "ExamId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Comments_LessonVideoVideoId",
+                table: "Comments",
+                column: "LessonVideoVideoId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Comments_QuestionId",
+                table: "Comments",
+                column: "QuestionId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Comments_TargetId_TargetType",
+                table: "Comments",
+                columns: new[] { "TargetId", "TargetType" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Comments_UserId",
+                table: "Comments",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_ExamAttempts_ExamId",
                 table: "ExamAttempts",
                 column: "ExamId");
@@ -437,8 +612,25 @@ namespace Infrastructure.Migrations
                 column: "CreatedBy");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Exams_InvitationCode",
+                table: "Exams",
+                column: "InvitationCode",
+                unique: true,
+                filter: "[InvitationCode] IS NOT NULL");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Exams_SubjectId",
                 table: "Exams",
+                column: "SubjectId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_LessonVideos_CreatedBy",
+                table: "LessonVideos",
+                column: "CreatedBy");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_LessonVideos_SubjectId",
+                table: "LessonVideos",
                 column: "SubjectId");
 
             migrationBuilder.CreateIndex(
@@ -450,6 +642,36 @@ namespace Infrastructure.Migrations
                 name: "IX_Questions_SubjectId",
                 table: "Questions",
                 column: "SubjectId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Ratings_ExamId",
+                table: "Ratings",
+                column: "ExamId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Ratings_LessonVideoVideoId",
+                table: "Ratings",
+                column: "LessonVideoVideoId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Ratings_QuestionId",
+                table: "Ratings",
+                column: "QuestionId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Ratings_TargetId_TargetType",
+                table: "Ratings",
+                columns: new[] { "TargetId", "TargetType" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Ratings_UserId",
+                table: "Ratings",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserFollows_FollowedId",
+                table: "UserFollows",
+                column: "FollowedId");
         }
 
         /// <inheritdoc />
@@ -474,7 +696,16 @@ namespace Infrastructure.Migrations
                 name: "AttemptAnswers");
 
             migrationBuilder.DropTable(
+                name: "Comments");
+
+            migrationBuilder.DropTable(
                 name: "ExamQuestions");
+
+            migrationBuilder.DropTable(
+                name: "Ratings");
+
+            migrationBuilder.DropTable(
+                name: "UserFollows");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");
@@ -484,6 +715,9 @@ namespace Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "ExamAttempts");
+
+            migrationBuilder.DropTable(
+                name: "LessonVideos");
 
             migrationBuilder.DropTable(
                 name: "Questions");

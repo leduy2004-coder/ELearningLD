@@ -17,9 +17,10 @@ public class ExamAttempt : IDateTracking
     public string? UserId { get; set; }
     public User? Student { get; set; }
 
-    public DateTime StartTime { get; set; }
-    public DateTime EndTime { get; set; }
-    public double Score { get; set; }
+    public DateTime StartTime { get; set; } // Thời gian bắt đầu làm bài
+    public DateTime EndTime { get; set; }   // Thời gian kết thúc (StartTime + Duration)
+
+    public double Score { get; set; } // Điểm số
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }

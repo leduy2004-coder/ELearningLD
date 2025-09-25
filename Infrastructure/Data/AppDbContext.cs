@@ -18,6 +18,10 @@ namespace Infrastructure.Data
         public DbSet<ExamQuestion> ExamQuestions { get; set; }
         public DbSet<ExamAttempt> ExamAttempts { get; set; }
         public DbSet<AttemptAnswer> AttemptAnswers { get; set; }
+        public DbSet<LessonVideo> LessonVideos { get; set; } // Thêm mới
+        public DbSet<Comment> Comments { get; set; } // Thêm mới
+        public DbSet<Rating> Ratings { get; set; } // Thêm mới
+        public DbSet<UserFollow> UserFollows { get; set; } // Thêm mới
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -32,12 +36,15 @@ namespace Infrastructure.Data
             modelBuilder.Entity<AttemptAnswer>()
                 .HasKey(aa => new { aa.AttemptId, aa.QuestionId });
 
+            modelBuilder.Entity<UserFollow>()
+                .HasKey(uf => new { uf.FollowerId, uf.FollowedId }); // Khóa chính composite cho UserFollow
+
             // --- Cascade paths cho ExamQuestion ---
             modelBuilder.Entity<ExamQuestion>()
                 .HasOne(eq => eq.Exam)
                 .WithMany(e => e.ExamQuestions)
                 .HasForeignKey(eq => eq.ExamId)
-                .OnDelete(DeleteBehavior.Cascade); // Xóa Exam → ExamQuestions
+                .OnDelete(DeleteBehavior.Cascade); // Xóa Exam → Xóa ExamQuestions
 
             modelBuilder.Entity<ExamQuestion>()
                 .HasOne(eq => eq.Question)
@@ -50,13 +57,19 @@ namespace Infrastructure.Data
                 .HasOne(aa => aa.Attempt)
                 .WithMany(a => a.AttemptAnswers)
                 .HasForeignKey(aa => aa.AttemptId)
-                .OnDelete(DeleteBehavior.Cascade); // Xóa Attempt → AttemptAnswer
+                .OnDelete(DeleteBehavior.Cascade); // Xóa Attempt → Xóa AttemptAnswer
 
             modelBuilder.Entity<AttemptAnswer>()
                 .HasOne(aa => aa.Question)
                 .WithMany()
                 .HasForeignKey(aa => aa.QuestionId)
                 .OnDelete(DeleteBehavior.Restrict); // Xóa Question không tự động xóa
+
+            modelBuilder.Entity<AttemptAnswer>()
+                .HasOne(aa => aa.Answer)
+                .WithMany()
+                .HasForeignKey(aa => aa.AnswerId)
+                .OnDelete(DeleteBehavior.Restrict); // Xóa Answer không tự động xóa
 
             // --- Question → Answer ---
             modelBuilder.Entity<Answer>()
@@ -92,6 +105,52 @@ namespace Infrastructure.Data
                 .WithMany(u => u.ExamsCreated)
                 .HasForeignKey(e => e.CreatedBy)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // --- LessonVideo → User ---
+            modelBuilder.Entity<LessonVideo>()
+                .HasOne(lv => lv.Creator)
+                .WithMany(u => u.LessonVideosCreated)
+                .HasForeignKey(lv => lv.CreatedBy)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // --- UserFollow → User (Follower và Followed) ---
+            modelBuilder.Entity<UserFollow>()
+                .HasOne(uf => uf.Follower)
+                .WithMany(u => u.Following)
+                .HasForeignKey(uf => uf.FollowerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<UserFollow>()
+                .HasOne(uf => uf.Followed)
+                .WithMany(u => u.Followers)
+                .HasForeignKey(uf => uf.FollowedId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // --- Comment → User ---
+            modelBuilder.Entity<Comment>()
+                .HasOne(c => c.User)
+                .WithMany()
+                .HasForeignKey(c => c.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // --- Rating → User ---
+            modelBuilder.Entity<Rating>()
+                .HasOne(r => r.User)
+                .WithMany()
+                .HasForeignKey(r => r.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // --- Index cho InvitationCode (tối ưu tìm kiếm) ---
+            modelBuilder.Entity<Exam>()
+                .HasIndex(e => e.InvitationCode)
+                .IsUnique(); // Đảm bảo InvitationCode là duy nhất (nếu có)
+
+            // --- Index cho TargetId và TargetType (Comment, Rating) ---
+            modelBuilder.Entity<Comment>()
+                .HasIndex(c => new { c.TargetId, c.TargetType });
+
+            modelBuilder.Entity<Rating>()
+                .HasIndex(r => new { r.TargetId, r.TargetType });
         }
     }
 }

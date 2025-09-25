@@ -23,8 +23,16 @@ public class Question : IDateTracking
     public string? CreatedBy { get; set; }
     public User? Creator { get; set; }
 
+    // Thêm mới: Giải thích lời giải cho câu hỏi luyện tập
+    [MaxLength(5000)]
+    public string? Explanation { get; set; }  // Giải thích chi tiết lời giải (tùy chọn, hỗ trợ luyện tập)
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }
 
     public ICollection<Answer>? Answers { get; set; }
+
+    // Thêm mới: Quan hệ bình luận và đánh giá
+    public ICollection<Comment>? Comments { get; set; }
+    public ICollection<Rating>? Ratings { get; set; }
 }
